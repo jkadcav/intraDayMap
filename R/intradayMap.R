@@ -32,7 +32,7 @@ readCSV<-function(){
 #' @export
 #' @examples
 #' expFin()
-expFin<-function(dto,distance,course,mtx,odds){
+expFin<-function(data,dto,distance,course,mtx,odds){
   filter<-data$DATE<as.Date(dto) & data$DISTANCE==distance & data$COURSE==course & data$win_price_band==odds & data$mtx==mtx & !is.na(data$mtx) & is.finite(data$DISTANCE) & is.finite(data$win_price_band)
   a<-data[filter,]
   if(is.numeric(mtx) | is.numeric(odds)) avg.fin<-mean(a$finish_order,na.rm=T)
@@ -80,7 +80,7 @@ errorCalc<-function(actual,exp){
 #' @export
 #' @examples
 #' processraceday()
-processraceday<-function(raceday,race){
+processraceday<-function(data,raceday,race){
   if(grepl("/",raceday$Date[1])) raceday$Date<-as.Date(raceday$Date,"%d/%m/%Y")
   raceday$exp_fin_order<-NA
   raceday$Matrix<-toupper(raceday$Matrix)
@@ -89,7 +89,7 @@ processraceday<-function(raceday,race){
   startTime<-Sys.time()
   for (i in 1:total){
     if(is.na(raceday$Matrix[i]) | is.na(raceday$Odds[i])) next
-    exp.fin.order<-expFin(raceday$Date[i],raceday$Distance[i],raceday$Course[i],raceday$Matrix[i],raceday$Odds_Band[i])
+    exp.fin.order<-expFin(data,raceday$Date[i],raceday$Distance[i],raceday$Course[i],raceday$Matrix[i],raceday$Odds_Band[i])
     raceday$exp_fin_order[i]<-exp.fin.order
     tt<-round(difftime(Sys.time(),startTime,units="mins"),digits=2)
     message(paste("Processing Intraday: ",i," of ",total," (",tt," minutes elapsed) Est. Remaining: ",round(tt/i*total-tt,digits=2)," mins", sep=''))
@@ -105,11 +105,11 @@ processraceday<-function(raceday,race){
 #' @export
 #' @examples
 #' masterProcess()
-masterProcess<-function(raceday,race){
+masterProcess<-function(data,raceday,race){
   if(grepl("/",raceday$Date[1])) raceday$date<-as.Date(raceday$Date,"%d/%m/%Y")
   raceday$Odds_Band<-NA
   raceday$Odds_Band<-mapply(priceBandAlloc,raceday$Odds)
-  raceday<-processraceday(raceday,race)
+  raceday<-processraceday(data,raceday,race)
   raceday$Error<-mapply(errorCalc,raceday$FP,raceday$exp_fin_order)
   return(raceday)
 }
@@ -165,7 +165,7 @@ masterIntra<-function(date,venueName,animal,race){
   today<-intraDay::main(date,animal,venueName)
   today$Date<-date
   meetid<-today$MeetingID[1]
-  today<-masterProcess(today,race)
+  today<-masterProcess(data,today,race)
   x<-meetingMatrix(today,race)/race
   x<-t(x)
   z<-list(payload=list(position=x))
