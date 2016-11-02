@@ -4,7 +4,7 @@ options(stringsAsFactors=F)
 
 #' loads in master file
 #'
-#' @param 
+#' @param
 #' @keywords load masterfile
 #' @export
 #' @examples
@@ -80,12 +80,13 @@ errorCalc<-function(actual,exp){
 #' @export
 #' @examples
 #' processraceday()
-processraceday<-function(data,raceday,race){
+processraceday<-function(data,raceday,race,ind){
   if(grepl("/",raceday$Date[1])) raceday$Date<-as.Date(raceday$Date,"%d/%m/%Y")
   raceday$exp_fin_order<-NA
   raceday$Matrix<-toupper(raceday$Matrix)
   raceday$FP<-as.numeric(raceday$FP)
-  total<-nrow(raceday[raceday$Race<=race,])
+  if(ind==1) total<-nrow(raceday[raceday$Race<=race,])
+  else total<-nrow(raceday[raceday$Race==race,])
   startTime<-Sys.time()
   for (i in 1:total){
     if(is.na(raceday$Matrix[i]) | is.na(raceday$Odds[i])) next
@@ -105,11 +106,11 @@ processraceday<-function(data,raceday,race){
 #' @export
 #' @examples
 #' masterProcess()
-masterProcess<-function(data,raceday,race){
+masterProcess<-function(data,raceday,race,ind){
   if(grepl("/",raceday$Date[1])) raceday$date<-as.Date(raceday$Date,"%d/%m/%Y")
   raceday$Odds_Band<-NA
   raceday$Odds_Band<-mapply(priceBandAlloc,raceday$Odds)
-  raceday<-processraceday(data,raceday,race)
+  raceday<-processraceday(data,raceday,race,ind)
   raceday$Error<-mapply(errorCalc,raceday$FP,raceday$exp_fin_order)
   return(raceday)
 }
@@ -165,12 +166,18 @@ masterIntra<-function(date,venueName,animal,race){
   today<-intraDay::main(date,animal,venueName)
   today$Date<-date
   meetid<-today$MeetingID[1]
-  today<-masterProcess(data,today,race)
+  today<-masterProcess(data,today,race,1)
   x<-meetingMatrix(today,race)/race
   x<-t(x)
   z<-list(payload=list(position=x))
   url<-paste("http://dw-staging-elb-1068016683.ap-southeast-2.elb.amazonaws.com/api/markets/analysis?event_number=",race,"&market_name=MTX_POSITIONS&meeting_id=",meetid,"&provider_name=dw",sep="")
-  r<-httr::POST(url,body = z,encode="json")
+  r<-httr::POST(url,body = z,encode="json",)
+  today<-masterProcess(data,today,race,0)
+  x<-meetingMatrix(today,race)
+  x<-t(x)
+  z<-list(payload=list(position=x))
+  url<-paste("http://dw-staging-elb-1068016683.ap-southeast-2.elb.amazonaws.com/api/markets/analysis?event_number=",race,"&market_name=MTX_RACE_POSITIONS&meeting_id=",meetid,"&provider_name=dw",sep="")
+  r<-httr::POST(url,body = z,encode="json",)
   return(x)
 }
 
