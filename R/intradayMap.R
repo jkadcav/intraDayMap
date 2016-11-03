@@ -87,6 +87,9 @@ processraceday<-function(data,raceday,race,ind){
   raceday$FP<-as.numeric(raceday$FP)
   if(ind==1) total<-nrow(raceday[raceday$Race<=race,])
   else total<-nrow(raceday[raceday$Race==race,])
+    
+  if(ind==0) raceday<-raceday[raceday$Race==race,]
+  else raceday<-raceday
   startTime<-Sys.time()
   for (i in 1:total){
     if(is.na(raceday$Matrix[i]) | is.na(raceday$Odds[i])) next
