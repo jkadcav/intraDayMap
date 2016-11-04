@@ -32,8 +32,8 @@ readCSV<-function(){
 #' @export
 #' @examples
 #' expFin()
-expFin<-function(data,dto,distance,course,mtx,odds){
-  filter<-data$DATE<as.Date(dto) & data$DISTANCE==distance & data$COURSE==course & data$win_price_band==odds & data$mtx==mtx & !is.na(data$mtx) & is.finite(data$DISTANCE) & is.finite(data$win_price_band)
+expFin<-function(data,dto,distance,course,mtx,odds,track){
+  filter<-data$DATE<as.Date(dto) & data$DISTANCE==distance & data$COURSE==course & data$win_price_band==odds & data$mtx==mtx & !is.na(data$mtx) & is.finite(data$DISTANCE) & is.finite(data$win_price_band) & data$TRACK==track
   a<-data[filter,]
   if(is.numeric(mtx) | is.numeric(odds)) avg.fin<-mean(a$finish_order,na.rm=T)
   else avg.fin<-NA
@@ -93,7 +93,7 @@ processraceday<-function(data,raceday,race,ind){
   startTime<-Sys.time()
   for (i in 1:total){
     if(is.na(raceday$Matrix[i]) | is.na(raceday$Odds[i])) next
-    exp.fin.order<-expFin(data,raceday$Date[i],raceday$Distance[i],raceday$Course[i],raceday$Matrix[i],raceday$Odds_Band[i])
+    exp.fin.order<-expFin(data,raceday$Date[i],raceday$Distance[i],raceday$Course[i],raceday$Matrix[i],raceday$Odds_Band[i],raceday$Track[i])
     raceday$exp_fin_order[i]<-exp.fin.order
     tt<-round(difftime(Sys.time(),startTime,units="mins"),digits=2)
     message(paste("Processing Intraday: ",i," of ",total," (",tt," minutes elapsed) Est. Remaining: ",round(tt/i*total-tt,digits=2)," mins", sep=''))
