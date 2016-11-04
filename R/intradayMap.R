@@ -61,6 +61,19 @@ priceBandAlloc<-function(odds){
   else return(10)
 }
 
+#' allocates track type (AWT/POLY/Turf)
+#' #'
+#' @param track track type
+#' @keywords tracktype
+#' @export
+#' @examples
+#' trackType('POLYTRACK') 
+trackType<-function(track){
+	if(grepl('AWT',track)) return('AWT')
+	else if(grepl('POLYTRACK',track)) return('POL')
+	else return('TURF')
+}
+    
 #' calculates error between actual vs expected
 #'
 #' @param actual exp calcs difference between actual and expected
@@ -168,6 +181,7 @@ masterIntra<-function(date,venueName,animal,race){
   data<-readCSV()
   today<-intraDay::main(date,animal,venueName)
   today$Date<-date
+  today$Track<-mapply(trackType,today$Race_Name)
   meetid<-today$MeetingID[1]
   today<-masterProcess(data,today,race,1)
   x<-meetingMatrix(today,race)/race
