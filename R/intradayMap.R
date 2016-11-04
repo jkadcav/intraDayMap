@@ -86,6 +86,19 @@ errorCalc<-function(actual,exp){
   return(NA)
 }
 
+#' Maps Venue Name
+#'
+#' @param course name of venue as per DATALAB
+#' @keywords venueallocation
+#' @export
+#' @examples
+#' venueAlloc('SINGAPORE')
+venueAlloc<-function(course){
+  if(course=="SINGAPORE") res<-"KRANJI"
+  else res<-course
+  return(course)
+}
+  
 #' calculates the expected position for raceday to build the master csv
 #'
 #' @param raceday race master function to cycle through races
@@ -182,6 +195,7 @@ masterIntra<-function(date,venueName,animal,race){
   today<-intraDay::main(date,animal,venueName)
   today$Date<-date
   today$Track<-mapply(trackType,today$Race_Name)
+  today$Course<-mapply(venueAlloc,today$Course)
   meetid<-today$MeetingID[1]
   today<-masterProcess(data,today,race,1)
   x<-meetingMatrix(today,race)/race
