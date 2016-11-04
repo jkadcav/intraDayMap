@@ -11,10 +11,10 @@ options(stringsAsFactors=F)
 #' readCSV()
 readCSV<-function(){
   allEnv <- Sys.getenv("ENV")
-
+  
   if(allEnv=='DEV') data<-read.csv(file=file.choose())
   else data<-read.csv('/home/opencpu/R/HK.IntraDayProcessed.csv')
-
+  
   if(grepl("/",data$DATE[1])) data$DATE<-as.Date(data$DATE,"%d/%m/%Y")
   return(data)
 }
@@ -69,11 +69,11 @@ priceBandAlloc<-function(odds){
 #' @examples
 #' trackType('POLYTRACK') 
 trackType<-function(track){
-	if(grepl('AWT',track)) return('AWT')
-	else if(grepl('POLYTRACK',track)) return('POL')
-	else return('TURF')
+  if(grepl('AWT',track)) return('AWT')
+  else if(grepl('POLYTRACK',track)) return('POL')
+  else return('TURF')
 }
-    
+
 #' calculates error between actual vs expected
 #'
 #' @param actual exp calcs difference between actual and expected
@@ -100,7 +100,7 @@ processraceday<-function(data,raceday,race,ind){
   raceday$FP<-as.numeric(raceday$FP)
   if(ind==1) total<-nrow(raceday[raceday$Race<=race,])
   else total<-nrow(raceday[raceday$Race==race,])
-    
+  
   if(ind==0) raceday<-raceday[raceday$Race==race,]
   else raceday<-raceday
   startTime<-Sys.time()
@@ -197,4 +197,3 @@ masterIntra<-function(date,venueName,animal,race){
   r<-httr::POST(url,body = z,encode="json",)
   return(x)
 }
-
