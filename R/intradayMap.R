@@ -96,9 +96,9 @@ errorCalc<-function(actual,exp){
 venueAlloc<-function(course){
   if(course=="SINGAPORE") res<-"KRANJI"
   else res<-course
-  return(course)
+  return(res)
 }
-  
+
 #' calculates the expected position for raceday to build the master csv
 #'
 #' @param raceday race master function to cycle through races
@@ -154,7 +154,8 @@ masterProcess<-function(data,raceday,race,ind){
 #' @examples
 #' meetingMatrix()
 meetingMatrix<-function(today,race){
-  races<-today[!duplicated(today[c("Date","Race")]),c("Date","Race")]
+  races<-today[!duplicated(today[c("Date","Race","Track")]),c("Date","Race","Track")]
+  track<-races$Track[races$Race==race]
   r<-seq(10,1,-1)
   c<-c('E','D','C','B','A')
   diag<-data.frame(matrix(NA,length(c),length(r)))
@@ -166,7 +167,7 @@ meetingMatrix<-function(today,race){
     for (i in 10:1){       #column names
       for(j in 1:r.tot){   #row names
         mtx<-paste(i,rownames(diag)[j],sep="")
-        filtera<-toupper(today$Matrix)==mtx #today$Include==1
+        filtera<-toupper(today$Matrix)==mtx & today$Track==track #today$Include==1
         b<-today[filtera,'Error']
         if(length(b)<1) diag[j,which(colnames(diag)==i)]<-0
         else diag[j,which(colnames(diag)==i)]<-sum(b,na.rm=T)
@@ -198,7 +199,11 @@ masterIntra<-function(date,venueName,animal,race){
   today$Course<-mapply(venueAlloc,today$Course)
   meetid<-today$MeetingID[1]
   today<-masterProcess(data,today,race,1)
-  x<-meetingMatrix(today,race)/race
+  write.csv(today,'test.csv',row.names=F)
+  races<-today[!duplicated(today[c("Race","Track")]),c("Race","Track")]
+  track<-races$Track[races$Race==race]
+  races.t<-nrow(subset(races,races$Race<=race & races$Track==track))
+  x<-meetingMatrix(today,race)/races.t
   x<-t(x)
   z<-list(payload=list(position=x))
   url<-paste("http://dw-staging-elb-1068016683.ap-southeast-2.elb.amazonaws.com/api/markets/analysis?event_number=",race,"&market_name=MTX_POSITIONS&meeting_id=",meetid,"&provider_name=dw",sep="")
