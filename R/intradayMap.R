@@ -153,7 +153,7 @@ masterProcess<-function(data,raceday,race,ind){
 #' @export
 #' @examples
 #' meetingMatrix()
-meetingMatrix<-function(today,race){
+meetingMatrix<-function(today,race,ind){
   races<-today[!duplicated(today[c("Date","Race","Track")]),c("Date","Race","Track")]
   track<-races$Track[races$Race==race]
   r<-seq(10,1,-1)
@@ -167,7 +167,8 @@ meetingMatrix<-function(today,race){
     for (i in 10:1){       #column names
       for(j in 1:r.tot){   #row names
         mtx<-paste(i,rownames(diag)[j],sep="")
-        filtera<-toupper(today$Matrix)==mtx & today$Track==track #today$Include==1
+        if(ind==1) filtera<-toupper(today$Matrix)==mtx & today$Track==track & today$Include==1
+        else if(ind==0) filtera<-toupper(today$Matrix)==mtx & today$Track==track
         b<-today[filtera,'Error']
         if(length(b)<1) diag[j,which(colnames(diag)==i)]<-0
         else diag[j,which(colnames(diag)==i)]<-sum(b,na.rm=T)
@@ -200,16 +201,16 @@ masterIntra<-function(date,venueName,animal,race){
   meetid<-today$MeetingID[1]
   today<-masterProcess(data,today,race,1)
   write.csv(today,'test.csv',row.names=F)
-  races<-today[!duplicated(today[c("Race","Track")]),c("Race","Track")]
+  races<-today[!duplicated(today[c("Race","Track","Include")]),c("Race","Track","Include")]
   track<-races$Track[races$Race==race]
-  races.t<-nrow(subset(races,races$Race<=race & races$Track==track))
-  x<-meetingMatrix(today,race)/races.t
+  races.t<-nrow(subset(races,races$Race<=race & races$Track==track & races$Include==1))
+  x<-meetingMatrix(today,race,1)/races.t
   x<-t(x)
   z<-list(payload=list(position=x))
   url<-paste("http://dw-staging-elb-1068016683.ap-southeast-2.elb.amazonaws.com/api/markets/analysis?event_number=",race,"&market_name=MTX_POSITIONS&meeting_id=",meetid,"&provider_name=dw",sep="")
   r<-httr::POST(url,body = z,encode="json",)
   today<-masterProcess(data,today,race,0)
-  x<-meetingMatrix(today,race)
+  x<-meetingMatrix(today,race,0)
   x<-t(x)
   z<-list(payload=list(position=x))
   url<-paste("http://dw-staging-elb-1068016683.ap-southeast-2.elb.amazonaws.com/api/markets/analysis?event_number=",race,"&market_name=MTX_RACE_POSITIONS&meeting_id=",meetid,"&provider_name=dw",sep="")
