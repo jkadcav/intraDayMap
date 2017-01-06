@@ -11,10 +11,10 @@ options(stringsAsFactors=F)
 #' readCSV()
 readCSV<-function(){
   allEnv <- Sys.getenv("ENV")
-  
+
   if(allEnv=='DEV') data<-read.csv(file=file.choose())
   else data<-read.csv('/home/opencpu/R/HK.IntraDayProcessed.csv')
-  
+
   if(grepl("/",data$DATE[1])) data$DATE<-as.Date(data$DATE,"%d/%m/%Y")
   return(data)
 }
@@ -67,7 +67,7 @@ priceBandAlloc<-function(odds){
 #' @keywords tracktype
 #' @export
 #' @examples
-#' trackType('POLYTRACK') 
+#' trackType('POLYTRACK')
 trackType<-function(track){
   if(grepl('AWT',track)) return('AWT')
   else if(grepl('POLYTRACK',track)) return('POL')
@@ -113,7 +113,7 @@ processraceday<-function(data,raceday,race,ind){
   raceday$FP<-as.numeric(raceday$FP)
   if(ind==1) total<-nrow(raceday[raceday$Race<=race,])
   else total<-nrow(raceday[raceday$Race==race,])
-  
+
   if(ind==0) raceday<-raceday[raceday$Race==race,]
   else raceday<-raceday
   startTime<-Sys.time()
@@ -192,15 +192,15 @@ meetingMatrix<-function(today,race,ind){
 #' @export
 #' @examples
 #' masterIntra()
-masterIntra<-function(date,venueName,animal,race){
+masterIntra<-function(date,meetingId,race){
   data<-readCSV()
-  today<-intraDay::main(date,animal,venueName)
+  today<-intraDay::main(meetingId)
   today$Date<-date
   today$Track<-mapply(trackType,today$Race_Name)
   today$Course<-mapply(venueAlloc,today$Course)
   meetid<-today$MeetingID[1]
+  print(today)
   today<-masterProcess(data,today,race,1)
-  write.csv(today,'test.csv',row.names=F)
   races<-today[!duplicated(today[c("Race","Track","Include")]),c("Race","Track","Include")]
   track<-races$Track[races$Race==race]
   races.t<-nrow(subset(races,races$Race<=race & races$Track==track & races$Include==1))
